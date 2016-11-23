@@ -22,9 +22,9 @@
 \usepackage{unicode-math}
 \usepackage{empheq}
 \usepackage[most]{tcolorbox}
- 
+
  \usepackage{hyperref}
- 
+
  \usepackage{caption}
 
 \usepackage{xunicode} %handle unicode
@@ -96,7 +96,7 @@
 \end{center}
 
 \section{What is Classification}
-Classification is a classic instance of \textbf{supervised learning}. The goal is to define a \textbf{classifier} which properly assigns a new data point -- let's call it $\xb$ -- to the appropriate discrete class $C_k \in \lbrace C_1, \ldots, C_K \rbrace$. While there are solutions to classification problems (i.e., nonparametric) which can be posed when the number of classes, $K$, is not known \textit{a priori} or is otherwise unbounded, below we will assume that it not just countable, but also  finite and typically specified as part of the problem statement. Notice that the discrete number of classes is what makes this a \textit{classification} problem --- the machine learning equivalent for continuous data would generally be termed \textit{regression}. 
+Classification is a classic instance of \textbf{supervised learning}. The goal is to define a \textbf{classifier} which properly assigns a new data point -- let's call it $\xb$ -- to the appropriate discrete class $C_k \in \lbrace C_1, \ldots, C_K \rbrace$. While there are solutions to classification problems (i.e., nonparametric) which can be posed when the number of classes, $K$, is not known \textit{a priori} or is otherwise unbounded, below we will assume that it not just countable, but also  finite and typically specified as part of the problem statement. Notice that the discrete number of classes is what makes this a \textit{classification} problem --- the machine learning equivalent for continuous data would generally be termed \textit{regression}.
 
 The process of solving a a classification problem involves two stages: \textbf{Training}  -- optimizing the classifier using labeled training data, and \textbf{Testing} -- evaluating  the performance of the optimized classifier on labeled testing data. Thus, we always divide our labeled data into two: a test data set to evaluate performance and a separate training  data set to ensure that the classifier we have learned generalizes. (Aside - if we didn't do this, what would be the best performing classifier? A lookup table!)  In cases when there are hyperparameters to be optimized -- for example in the model or statistical distribution of the data -- we can split the labeled data into three groups: a training set, a \textbf{validation} data set to pick the best model, and a test set to evaluate final performance.
 
@@ -138,7 +138,7 @@ To \textbf{train} the classifier, we can use \textit{maximum likelihood paramete
 \begin{equation}
     \begin{split}
         \Pr \left(C_k \mid \xb\right) &= \frac{\Pr\left(\xb \mid C_k\right) \Pr\left(C_k\right)}{\Pr\left(\xb\right)} \\
-                    &= \frac{\Pr\left(\xb \mid C_k\right) \Pr\left(C_k\right)}{\sum_{i=1}^{K} \Pr\left(\xb \mid C_i\right) \Pr\left(C_i\right)} 
+                    &= \frac{\Pr\left(\xb \mid C_k\right) \Pr\left(C_k\right)}{\sum_{i=1}^{K} \Pr\left(\xb \mid C_i\right) \Pr\left(C_i\right)}
     \end{split}
 \end{equation}
 
@@ -150,18 +150,18 @@ To \textbf{train} the classifier, we can use \textit{maximum likelihood paramete
 
 \subsection{Philosophy of Probabilistic Generative Models}
 $\Pr(\xb \mid C_k)$ and $\Pr(C_k)$ define a ``probabilistic generative model'' (or just ``generative model''). Unlike other classification schemes, this means
-that we can generate synthetic data using our model. 
+that we can generate synthetic data using our model.
 
-For example, imagine there are two classes and $\xb \in \mathbb{R}^2$. 
+For example, imagine there are two classes and $\xb \in \mathbb{R}^2$.
 \begin{flalign*}
 	\Pr(C_1) = 0.7 \\
 	\Pr(C_2) = 0.3 \\
 	\Pr(\xb \mid C_1) = \mathcal{N} \Bigl(
-		\begin{bmatrix} 2 \\ 1 \end{bmatrix}, 
+		\begin{bmatrix} 2 \\ 1 \end{bmatrix},
 		\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} \Bigr) \\
 	\Pr(\xb \mid C_2) = \mathcal{N} \Bigl(
-		\begin{bmatrix} 1 \\ 2 \end{bmatrix}, 
-		\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} \Bigr) \\		
+		\begin{bmatrix} 1 \\ 2 \end{bmatrix},
+		\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} \Bigr) \\
 \end{flalign*}
 To generate synthetic data from this model begin by sampling from your handy $\text{Uniform}[0,1)$ random number generator.
 \begin{itemize}
@@ -195,7 +195,7 @@ Once we write down the \textit{training data likelihood}, maximum likelihood par
 \end{minipage}
 \end{center}
 
- 
+
 With a probabilistic generative model approach, in general, we will choose the parameters $\symbf{\theta}$ that maximize the data likelihood (maximum likelihood parameter estimation).
 
 \begin{framed}
@@ -211,17 +211,17 @@ With a probabilistic generative model approach, in general, we will choose the p
  & \Pr(t_n = 0) = \Pr(C_2) = (1- \pi)
  \end{flalign*}
 
-For a data point $\xb_n \in \mathbb{R}^D$, 
+For a data point $\xb_n \in \mathbb{R}^D$,
 \begin{align*}
 \Pr(\xb_n, C_1) &= \Pr(\xb_n \mid C_1) \Pr(C_1) = \mathcal{N}(\xb_n \mid \ub_1, \Sb) \cdot \pi \\
-\Pr(\xb_n, C_2) &= \Pr(\xb_n \mid C_2) \Pr(C_2) = \mathcal{N}(\xb_n \mid \ub_2, \Sb) \cdot (1- \pi)  
+\Pr(\xb_n, C_2) &= \Pr(\xb_n \mid C_2) \Pr(C_2) = \mathcal{N}(\xb_n \mid \ub_2, \Sb) \cdot (1- \pi)
  \end{align*}
 
-The data likelihood for $N$ data points is then 
+The data likelihood for $N$ data points is then
 \begin{equation}
 	\begin{split}
 		\mathcal{L} &\equiv \Pr \left( \lbrace\xb_n, t_n\rbrace \mid \symbf{\theta} \right)  \\
-		 	&= \prod_{i=1}^{N} \Big(\mathcal{N}(\xb_n \mid \ub_1, \Sb) \cdot \pi\Big)^{t_n} 
+		 	&= \prod_{i=1}^{N} \Big(\mathcal{N}(\xb_n \mid \ub_1, \Sb) \cdot \pi\Big)^{t_n}
 			\Big(\mathcal{N}(\xb_n \mid \ub_2, \Sb) \cdot \pi\Big)^{1-t_n}
 	\end{split}
 \end{equation}
@@ -235,7 +235,7 @@ The data likelihood for $N$ data points is then
 where
 \begin{equation}
 	\begin{split}
-	& \log \left(\mathcal{N}(\xb_n \mid \ub _k, \Sb)\right) =  \\ 
+	& \log \left(\mathcal{N}(\xb_n \mid \ub _k, \Sb)\right) =  \\
 		&\quad \quad -\frac{1}{2} (\xb_n  - \ub_k)\tran \Sb^{-1} (\xb_n  - \ub_k)
 		- \frac{1}{2} \logdet{\Sb}- \frac{D}{2} \log(2 \pi)
 	\end{split}
@@ -256,11 +256,11 @@ simple calculus - take the gradient and set equal to zero.
 	\tcboxmath{\pi = \frac{N_1}{N}}
 \end{equation}
 
-What this means is that the maximum likelihood estimate of the class prior probabilities are just the fraction of the training data assigned to each class. 
+What this means is that the maximum likelihood estimate of the class prior probabilities are just the fraction of the training data assigned to each class.
 
 
 \subsubsection*{(i) Find $\ub_1$}
- Because of the way we've formulated the problem this is still simple calculus - take the gradient and set equal to zero. 
+ Because of the way we've formulated the problem this is still simple calculus - take the gradient and set equal to zero.
  If you're not familiar with quadratic forms, take a look at the table of useful matrix calculus identities at the end.
 
 \begin{align*}
@@ -273,7 +273,7 @@ What this means is that the maximum likelihood estimate of the class prior proba
 	&\implies \Sb^{-1} \sum_{n=1}^{N} \Big(t_n  \xb_n  \Big) = \Sb^{-1} \Big(  \ub_1  \sum_{n=1}^{N} t_n \Big)
 \end{align*}
 \begin{equation}
-	\tcboxmath{\ub_1 = \frac{1}{N_1} \sum_{n=1}^N t_n \xb_n} 
+	\tcboxmath{\ub_1 = \frac{1}{N_1} \sum_{n=1}^N t_n \xb_n}
 \end{equation}
 Similarly, for $\ub_2$:
 \begin{equation}
@@ -294,7 +294,7 @@ Keeping only the terms that depend on $\Sb$:
 	 & \quad \quad \quad   - \frac{1 - t_n}{2}  \Big(  - \Sb^{-1} (\xb_n  - \ub_2)  (\xb_n  - \ub_2)\tran \Sb^{-1} - \Sb^{-1} \Big)  \Big]  \\
 	 & = 0 \\
 \intertext{If we left and right multiply by $\Sb$,} \\
-	0 &= \sum_{i=1}^{N} \Big[   \frac{t_n }{2} \Big(  (\xb_n  - \ub_1)  (\xb_n  - \ub_1)\tran  - \Sb \Big)   +  \frac{1 - t_n}{2}  \Big(  (\xb_n  - \ub_2)  (\xb_n  - \ub_2)\tran  - \Sb \Big)  \Big] 
+	0 &= \sum_{i=1}^{N} \Big[   \frac{t_n }{2} \Big(  (\xb_n  - \ub_1)  (\xb_n  - \ub_1)\tran  - \Sb \Big)   +  \frac{1 - t_n}{2}  \Big(  (\xb_n  - \ub_2)  (\xb_n  - \ub_2)\tran  - \Sb \Big)  \Big]
  \end{align*}
 Note that the labels, $\lbrace t_n\rbrace$ select which of the two terms are actually calculated for each data point. Also getting rid of the $\frac{1}{2}$ terms, we can write this as
 \begin{align*}
@@ -311,13 +311,13 @@ Note that the labels, $\lbrace t_n\rbrace$ select which of the two terms are act
 	\end{split}}
 \end{equation}
 
-So what we've shown is that the maximum likelihood estimate of the shared covariance matrix is a weighted sum of the  sample covariances of each of the classes 
-($\mathbf{S}_1$ and $\mathbf{S}_2$) where the weighting  by the fraction of points in each class.  These three results make sense intuitively - absent any other 
-information, the sample estimates of the training data will be the best estimates of the parameters. 
+So what we've shown is that the maximum likelihood estimate of the shared covariance matrix is a weighted sum of the  sample covariances of each of the classes
+($\mathbf{S}_1$ and $\mathbf{S}_2$) where the weighting  by the fraction of points in each class.  These three results make sense intuitively - absent any other
+information, the sample estimates of the training data will be the best estimates of the parameters.
 \end{framed}
 
 \subsection{Test Phase: Assigning a new data point to a class}
-Once we have trained our model, we will want to assign data to the best class. As discussed in lecture, aspects of the problem might imply cost/loss functions that 
+Once we have trained our model, we will want to assign data to the best class. As discussed in lecture, aspects of the problem might imply cost/loss functions that
 would result in biased assignments. Absent these considerations, the best assignment is the \textit{maximum a posteriori} class.
 
 \begin{center}
@@ -328,12 +328,12 @@ would result in biased assignments. Absent these considerations, the best assign
 		\hat{k} &= \argmax_m \Pr (C_m \mid \xb ) \nonumber \\
 		&= \argmax_m  \frac{\Pr (\xb \mid C_m) \Pr (C_m)}{\Pr (\xb)} \nonumber \\
 		&= \argmax_m \Pr (\xb \mid C_m) \Pr (C_m) \nonumber \\
-		&= \argmax_m \log \Pr (\xb \mid C_m) + \log \Pr (C_m) 
+		&= \argmax_m \log \Pr (\xb \mid C_m) + \log \Pr (C_m)
     \end{align}
 \end{propertybox}
 \end{minipage}
 \end{center}
-where we've simplified by dropping the $\Pr(\xb)$ term, which is common to all classes. 
+where we've simplified by dropping the $\Pr(\xb)$ term, which is common to all classes.
 
 \begin{framed}
 \subsubsection*{\underline{Example cont'd:} Assignment for 2 Gaussians with shared covariance}
@@ -359,7 +359,7 @@ A hyperplane is defined as the set of all $\xb$ such that
 	y(\xb) = \mathbf{w}\tran \xb + w_0 = 0.
 	\label{eqn:hyperplane}
 \end{equation}
-Here, $\mathbf{w}$ determines the \textbf{direction} of the hyperplane and $w_0$ determines the offset from the origin. 
+Here, $\mathbf{w}$ determines the \textbf{direction} of the hyperplane and $w_0$ determines the offset from the origin.
 An example in 2-dimensions is to the right in Figure \ref{fig:hyperplane}.
 \end{minipage}\hfill
 \begin{minipage}{0.4 \textwidth}
@@ -406,9 +406,10 @@ The decision boundary is thus
 \begin{equation}
 	(\mathbf{w}_k - \mathbf{w}_j)\tran \xb + (w_{k0} - w_{j0})  = 0.
 \end{equation}
-Note that this is the same form as \eqref{eqn:hyperplane}, and thus the decision boundary \textit{in the case of Gaussian classes 
+Note that this is the same form as \eqref{eqn:hyperplane}, and thus the decision boundary \textit{in the case of Gaussian classes
 with a shared covariance matrix} is a $(D-1)$-dimensional hyperplane in $\mathbb{R}^D$.
 
+\pagebreak
 \section*{Appendix: Useful Matrix Properties and Calculus Identities}
 $\quad$
 \begin{center}
@@ -421,28 +422,49 @@ $\quad$
 	\end{split}
 \end{equation}
 
-\textit{Derivative of a matrix product for matrix $\mathbf{X}$}
+\textit{Derivative of a vector matrix product with matrix $\mathbf{X}$}
+\begin{equation}
+	\begin{split}
+	\frac{\partial}{\partial \mathbf{X}} \mathbf{a}\tran \mathbf{X} \mathbf{b} \tran
+    &= \mathbf{a}\; \mathbf{b}\tran \\
+	\end{split}
+\end{equation}
+
+\begin{equation}
+	\begin{split}
+	\frac{\partial}{\partial \mathbf{X}} \mathbf{a}\tran \mathbf{X}\tran \mathbf{b} \tran
+    &= \mathbf{b} \; \mathbf{a}\tran \\
+	\end{split}
+\end{equation}
+
+
+\textit{Derivative of the trace of a matrix product for matrix $\mathbf{X}$}
 \begin{equation}
 	\frac{\partial}{\partial \mathbf{X}} \Tr(\mathbf{X}^{-1} \mathbf{A}) = -\mathbf{X}\invtran \mathbf{A}\tran \mathbf{X}\invtran
 \end{equation}
+
+\begin{equation}
+	\frac{\partial}{\partial \mathbf{X}} \Tr(\mathbf{X} \, \mathbf{X}\tran \mathbf{A}) =
+    \mathbf{X}(\mathbf{A} + \mathbf{A}\tran)
+\end{equation}
+
 
 \textit{Derivative of the determinant of $\mathbf{X}$}
 \begin{equation}
 	\frac{\partial}{\partial \mathbf{X}} \logdet{\mathbf{X}} = \mathbf{X}\invtran
 \end{equation}
 
-\textit{Invariance of matrix trace to rotation}	
+\textit{Invariance of matrix trace to rotation}
 \begin{equation}
-	\Tr(\mathbf{A} \mathbf{B} \mathbf{C} \mathbf{D} \ldots) = \Tr(\mathbf{B} \mathbf{C} \mathbf{D} \ldots \mathbf{A}) = 
+	\Tr(\mathbf{A} \mathbf{B} \mathbf{C} \mathbf{D} \ldots) = \Tr(\mathbf{B} \mathbf{C} \mathbf{D} \ldots \mathbf{A}) =
 	\Tr(\mathbf{C} \mathbf{D} \ldots \mathbf{A}  \mathbf{B}) = \ldots
 \end{equation}
 
 You will find more on the wikipedia "Matrix calculus" page or by searching for the \
-\href{http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/intro.html}{"matrix reference manual"}.
+\href{http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/intro.html}{"matrix reference manual"}
+or ``the matrix cookbook''.
 \end{minipage}
 \end{center}
 
 
 \end{document}
-
-
