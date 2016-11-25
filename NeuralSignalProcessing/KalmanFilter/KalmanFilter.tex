@@ -1,0 +1,483 @@
+% !TEX TS-program = xelatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+
+\usepackage{parskip}
+\usepackage{framed}
+\usepackage{amsmath,amsthm,amssymb}
+
+\newtheorem*{conjecture}{Conjecture}
+
+\usepackage{titlesec}
+
+\usepackage[svgnames]{xcolor}
+
+%\usepackage{enumerate}
+\usepackage{enumitem}
+\newcounter{descriptcount}
+
+
+%\usepackage{mathpazo}
+\usepackage{mathtools}
+\usepackage{unicode-math}
+\usepackage{empheq}
+\usepackage[most]{tcolorbox}
+\usepackage{cancel}
+
+\usepackage{caption}
+
+\usepackage{xunicode} %handle unicode
+\usepackage{xltxtra} %XeTeX extras
+\usepackage{fontspec} %use OTF/TTF fonts
+
+%\newcommand{\lmr}{\fontfamily{lmr}\selectfont} % Latin Modern Roman
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\newcommand{\tikzmark}[1]{\tikz[overlay,remember picture] \node (#1) {};}
+
+
+%\setmainfont{Myriad Pro} %use this font
+%\setmathfont{Adobe Garamond Pro} %use this font for math
+
+\titleformat{\section}
+  {\large\bf}{\thesection}{0.25em}{}[\titlerule]
+\titlespacing{\section}
+  {0pt}{*1.5}{0.25em}
+
+\titleformat{\subsection}
+  {\normalfont\bf}{\thesubsection}{0.25em}{}
+\titlespacing{\subsection}
+  {0pt}{*1}{0.125em}
+
+\renewcommand\thesection{\Alph{section}.}
+\renewcommand\thesubsection{\thesection\arabic{subsection}}
+\renewcommand\thesubsubsection{(\roman{subsubsection}).}
+
+\renewcommand{\labelitemi}{\textemdash}
+
+\DeclareMathOperator{\dif}{d\!}
+%\DeclareMathOperator{\Pr}{P}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\F}{\mathfrak{F}}
+\DeclareMathOperator{\Poisson}{Poisson}
+\DeclareMathOperator{\Bernoulli}{Bernoulli}
+\DeclareMathOperator{\Binomial}{Binomial}
+\DeclareMathOperator{\Order}{O}
+\DeclareMathOperator{\Uniform}{Uniform}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\KLsym}{KL}
+\DeclarePairedDelimiterX{\klx}[2]{(}{)}{%
+  #1\,\delimsize\|\,#2%
+}
+\newcommand{\KL}{\KLsym\klx}
+
+\newcommand{\logdet}[1]{\log \left| {#1} \right| }
+
+\newcommand{\xb}{\mathbf{x}}
+\newcommand{\zb}{\mathbf{z}}
+\newcommand{\ub}{\symbf{\mu}}
+\newcommand{\Sb}{\symbf{\Sigma}}
+\newcommand{\Ab}{\mathbf{A}}
+\newcommand{\Qb}{\mathbf{Q}}
+\newcommand{\Cb}{\mathbf{C}}
+\newcommand{\Rb}{\mathbf{R}}
+
+\newcommand*{\tran}{^{\mkern-1.5mu\mathsf{T}}}
+\newcommand*{\invtran}{^{\mkern-1.5mu\mathsf{-T}}}
+
+
+\newenvironment{propertybox}{%
+   \def\FrameCommand{\colorbox{LightSteelBlue}}%
+   \MakeFramed{\advance\hsize-\width \FrameRestore}}
+ {\endMakeFramed}
+
+\lhead{\textbf{ELEC548}}
+\chead{Kalman Filter}
+\cfoot{}
+\rhead{}
+\rfoot{\thepage}
+\pagestyle{fancyplain}
+
+%\setlength\parindent{0pt}
+
+\allowdisplaybreaks
+
+
+\begin{document}
+\setmainfont{Myriad Pro} %use this font
+%\setmathfont{Latin Modern Math}
+%\setmathfont{TG Pagella Math}
+
+\begin{center}
+\large
+\textbf{ELEC 548} Kalman Filter
+\end{center}
+
+\section{Motivation - Continuous Latent Variable Models}
+We have implemented latent variable models for Classification, Clustering, and
+Dimensionality Reduction. In all of these cases, the data we were modeling were
+\textit{static} -- they came from a single snap shot or measurement and our
+models did not incorporate the concept of time or continuity.
+
+However, for many machine learning problems, the observed data \textit{vary with
+time}. For these problems, we will want our underlying latent variable model to
+capture the continuity present in the temporal relationship between data points.
+We want models that are \textit{dynamical}.
+
+\section{Linear Dynamical Systems (LDS)}
+At time step $t=1, \ldots, T$, let:
+\begin{align*}
+  \zb_t \in \mathbb{R}^M \quad & \text{be the (latent) ``state'' variable at time $t$} \\
+  \xb_t \in \mathbb{R}^D \quad & \text{be the observation at time $t$}
+\end{align*}
+
+\subsubsection*{State Model:}
+The state model describes how the state evolves over time. Similarly to how we
+used a linear Gaussian model for Dimensionality Reduction, pointing out that
+both the \textit{linear} and \textit{Gaussian} aspects make this the simplest
+interesting model, a Linear Dynamical System with Gaussian ``innovations''
+(changes from one time step to the next) is the simplest interesting model for
+how the underlying state evolves over time.
+
+\begin{equation}
+  \begin{aligned}
+    \zb_t \mid \zb_{t-1} &\sim \mathcal{N}(\Ab \zb_{t-1}, \Qb) \\
+    \zb_1 &\sim \mathcal{N}(\symbf{\pi}, \mathbf{V})
+  \end{aligned}
+  \label{eqn:dynamics}
+\end{equation}
+
+\subsubsection*{Observation Model:} The observation model describes how the
+observed data relates to the state. Similarly to the state mode, the simplest
+way of relating the state to our observed data is a linear, Gaussian observation
+model.
+\begin{equation}
+  \xb_t \mid \zb_t \sim \mathcal{N}(\Cb \zb_t, \Rb)
+  \label{eqn:observations}
+\end{equation}
+
+Thus, the model parameters are $\theta = \{\Ab, \Qb, \symbf{\pi}, \mathbf{V},
+\Cb, \Rb$. \textit{Exercise to the reader:} What are the dimensions of each of
+these parameters?
+
+\subsubsection*{Markov assumption}
+Notice that the state model uses a first-order Markov assumption. Specifically,
+we assume that $\zb_{t-1}$, the state at time $t-1$, contains all the relevant
+information necessary to predict $\zb_t$, the state at time $t$. This means
+that we can write down a simple formula for the joint probability of the state
+over all times:
+\begin{align*}
+  \Pr(\zb_1, \ldots, \zb_T) &= \Pr(\zb_1) \Pr(\zb_2 \mid \zb_1)
+      \Pr(\zb_3 \mid \zb_2, \cancel{\zb1}) \ldots
+      \Pr(\zb_T \mid \zb_1, \cancel{\zb_2 \ldots \zb_{T-1}})
+          \tag{Markov assumption} \\
+      &= \Pr(\zb_1) \prod_{t=2}^T \Pr(\zb_t \mid \zb_{t-1})
+\end{align*}
+
+\subsection{Training phase}
+\begin{tabular}{r l}
+  \textbf{Goal:} & Estimate the model parameters $\theta = \{\Ab, \Qb,
+  \symbf{\pi},\mathbf{V}, \Cb, \Rb$ from the training data. \\
+  \\
+  \textit{unsupervised} & If the values of the state variables $\zb_t$
+  are \textbf{unknown} during training, use the \textbf{EM algorithm} \\
+  \textit{learning} & Maximize $\Pr(\{\xb\} \mid \theta)$ with respect to
+  $\theta$. \\
+  \\
+  \textit{supervised} & If the values of the state variables $\zb_t$
+  are \textbf{known} (the simpler case) during training \\
+  \textit{learning} & Maximize $\Pr(\{\xb\}, \{\zb\} \mid \theta)$ with
+  respect to $\theta$. \\
+\end{tabular}
+
+We will consider the simpler, \textit{supervised learning} case, where the
+$\zb_t$ are known during training. This makes sense if we are designing, for
+example, a real time neural signal processing system in which the thing we wish
+to decode (e.g., arm trajectories) can be measured during trianing. In this
+context, the latent variable is known during training and unknown during
+testing/operation.
+
+\subsubsection{Maxmimum Likelihood Parameters in Supervised Training}
+\begin{equation*}
+  \Pr(\{\xb\}, \{\zb\} \mid \theta) = \Pr(\zb_1)
+    \prod_{t=2}^T \Pr(\zb_t \mid \zb_{t-1})
+    \Bigl(\prod_{t=1}^T \Pr(\xb_t \mid \xb_t)\Bigr)
+\end{equation*}
+
+Writing down the training data log-likelihood, we have
+\begin{align*}
+  \mathcal{L}(\theta) &= \log \Pr(\{\xb\}, \{\zb\} \mid \theta) \\
+  &= \log \Pr(\zb_1) +
+    \sum_{t=2}^T \log \Pr(\zb_t \mid \zb_{t-1}) +
+    \sum_{t=1}^T \log \Pr(\xb_t \mid \xb_t) \\
+  &= - \frac{M}{2} \log(2 \pi) - \frac{1}{2} \logdet{\mathbf{V}}
+       - \frac{1}{2} (\zb_1 - \symbf{\pi})\tran \mathbf{V}^{-1} (\zb_1 - \symbf{\pi}) \\
+  &\quad
+     + \sum_{t=2}^T \Bigl(-\frac{M}{2} \log(2 \pi) - \frac{1}{2} \logdet{\Qb}
+       -\frac{1}{2} (\zb_t - \Ab\zb_{t-1})\tran \Qb^{-1} (\zb_t - \Ab\zb_{t-1})
+       \Bigr)\\
+&\quad
+     + \sum_{t=1}^T \Bigl(-\frac{D}{2} \log(2 \pi) - \frac{1}{2} \logdet{\Rb}
+       -\frac{1}{2} (\xb_t - \Cb\zb_t)\tran \Rb^{-1} (\xb_t - \Cb\zb_t) \Bigr)
+\end{align*}
+
+Solving for $\Ab$ (which describes the \textit{dynamics} of the state variable):
+\begin{align*}
+  \frac{\partial \mathcal{L}(\theta)}{\partial \Ab} &=
+    \frac{\partial}{\partial \Ab} \Bigl\lbrace \sum_{t=2}^T \Bigl(
+     -\frac{1}{2} (\zb_t - \Ab\zb_{t-1})\tran \Qb^{-1} (\zb_t - \Ab\zb_{t-1})
+     \Bigr)\Bigr\rbrace \\
+  &= -\frac{1}{2} \frac{\partial}{\partial \Ab} \Bigl\lbrace \sum_{t=2}^T \Bigl(
+    -\zb_{t-1}\tran\Ab\tran \Qb^{-1} \zb_t
+    -\zb\tran \Qb^{-1} \Ab\zb_{t-1}
+    +\zb_{t-1}\tran\Ab\tran \Qb^{-1}\Ab\zb_{t-1} \Bigr)\Bigr\rbrace \\
+  &= -\frac{1}{2} \frac{\partial}{\partial \Ab} \Bigl\lbrace
+    \Tr\left(\Ab\tran \Qb^{-1} \sum_{t=2}^T \zb_t \zb_{t-1}\tran \right)
+    +\Tr\left(\Ab \sum_{t=2}^T \zb_t \zb_{t-1}\tran \Qb^{-1} \right)
+    +\Tr\left(\Qb^{-1} \Ab \sum_{t=2}^T \zb_t \zb_{t-1}\tran \Ab\tran \right)
+    \Bigr\rbrace \\
+  &= -\frac{1}{2} \left(-\Qb^{-1} \sum_{t=2}^T \zb_t \zb_{t-1}\tran
+    -\Qb^{-1} \sum_{t=2}^T \zb_t \zb_{t-1}\tran
+    +\Qb^{-1} \Ab \sum_{t=2}^T \zb_{t-1} \zb_{t-1}\tran
+    +\Qb^{-1} \Ab \sum_{t=2}^T \zb_{t-1} \zb_{t-1}\tran \right) \\
+  &= 0
+\end{align*}
+Here, we have made use of the fact that because its a symmetric covariance
+matrix, $\Qb\invtran = \Qb^{-1}$, and $\frac{d}{d \mathbf{X}}
+\Tr(\mathbf{X} \Ab \tran) = \frac{d}{d \mathbf{X}}
+\Tr(\mathbf{X}\tran \Ab) = \Ab$ and $\frac{d}{d \mathbf{X}}
+\Tr(\Ab \mathbf{X} \mathbf{B} \mathbf{X}\tran \Cb) =
+\Ab\tran\Cb\tran\mathbf{X}\mathbf{B}\tran +
+\Cb \Ab \mathbf{X} \mathbf{B}$. Solving, we have
+\begin{framed}
+  \begin{equation}
+    \Ab = \left(\sum_{t=2}^T \zb_t \zb_{t-1} \right)
+        \left(\sum_{t=2}^T \zb_{t-1} \zb_{t-1} \right)^{-1}
+    \label{eqn:dynamicsSoln}
+  \end{equation}
+\end{framed}
+
+Solving for $\Qb$ (which describes the variability of the \textit{innovation}, or
+change from one time step to the next of the state variable):
+\begin{align*}
+  \frac{\partial \mathcal{L}(\theta)}{\partial \Qb} &=
+    \frac{\partial}{\partial \Qb} \Bigl\lbrace
+    -\frac{T-1}{2}\logdet{\Qb} -\frac{1}{2} \Tr\left( \Qb^{-1} \sum_{n=2}^T
+    (\zb_t - \Ab \zb_{t-1}) (\zb_t - \Ab \zb_{t-1})\tran \right)\Bigr\rbrace \\
+  &= -\frac{T-1}{2} \Qb^{-1} -\frac{1}{2} \left( \Qb^{-1} \sum_{n=2}^T
+    (\zb_t - \Ab \zb_{t-1}) (\zb_t - \Ab \zb_{t-1})\tran \Qb^{-1}\right)
+  &= 0
+\end{align*}
+Here, we have additionally used the fact that $\frac{d}{d \mathbf{X}}
+\Tr(\mathbf{X}^{-1} \Ab) = -\mathbf{X}^{-1} \Ab \mathbf{X}^{-1}$ and
+$frac{d}{d \mathbf{X}} \logdet{\mathbf{X}} = \mathbf{X}^{-1}$. Solving, we have
+\begin{framed}
+  \begin{equation}
+    \Qb = \frac{1}{T-1} \sum_{t=2}^T (\zb_t - \Ab \zb_{t-1})
+    (\zb_t - \Ab \zb_{t-1})\tran
+    \label{eqn:innovationSoln}
+  \end{equation}
+\end{framed}
+(using the $\Ab$ found above.) Note that these solutions are identical to the
+solutions to linear regreissions!
+
+The solutions for $\frac{\partial \mathcal{L}(\theta)}{\partial \Cb} = 0$ and
+$\frac{\partial \mathcal{L}(\theta)}{\partial \Rb} = 0$ follow very similar
+math and give us the solutions
+\begin{framed}
+  \begin{equation}
+    \Cb = \left(\sum_{t=1}^T \xb_t \zb_t \right)
+        \left(\sum_{t=1}^T \zb_t \zb_t \right)^{-1}
+    \label{eqn:obsSoln}
+  \end{equation}
+\end{framed}
+and
+\begin{framed}
+  \begin{equation}
+    \Rb = \frac{1}{T} \sum_{t=1}^T (\xb_t - \Rb \zb_t) (\xb_t - \Cb \zb_t)\tran
+    \label{eqn:obsNoiseSoln}
+  \end{equation}
+\end{framed}
+(using the solution for $\Cb$ found above).
+
+In these solutions, for simplicity we have considered only one sequence of state
+and observation variables. In most scenarios, we would have \textbf{multiple
+sequences of training data}, potentially each with a different length ($T$). If
+we define $\{\xb\}_n$ and $\{\zb\}_n$ as the $n$-th training sequence
+($n = 1, \ldots, N$), then the goal for training would be to find the parameters,
+$theta$, which maximize $\prod_{n=1}^N \Pr(\{\xb\}_n, \{\zb\}_n \mid \theta)$.
+
+The maximimum likelihood solutions in the \textbf{multiple sequence} training
+case for equations \eqref{eqn:dynamicsSoln} -- \eqref{eqn:obsNoiseSoln} have
+the same form, but each summation is over more elements. The solution is
+\textit{almost} the same as concatenating all the sequences together, with
+the exception that the terms in the dynamics equations, \eqref{eqn:dynamicsSoln}
+and \eqref{eqn:innovationSoln} that would involve $\zb_{T,n}$ and $\zb_{1,n+1}$
+are not included.
+
+In the case of \textbf{multiple sequences}, we can also solve for the initial
+state distribution. $\symbf{\pi}$ and $\mathbf{V}$ are the sample mean and
+covariance, respectively, of the $N$ instances of $\zb_1$.
+
+\section{Test Phase / Decoding}
+\textbf{Goal:} Compute $\Pr(\zb_t \mid \xb_1, \ldots, \xb_t)$ for $t=1, \ldots, T$.
+
+The variables $\zb_1, \ldots, \zb_T, \xb_1, \ldots, \xb_T$ are jointly
+Gaussian, so $\Pr(\zb_t \mid \{\xb\}_1^T)$ is Gaussian (using the notation
+$\{\xb\}_1^T = \xb_1, \ldots, \xb_t$). Thus, we only need to find its mean
+and covariance.
+
+We can compute $\Pr(\zb_t \mid \{\xb\}_1^T)$ recursively starting at $t=1$.
+
+\begin{align}
+  \intertext{\textbf{One-step (forward) prediction}}
+  \underbrace{\Pr(\zb_t \mid \{\xb\}_1^{t-1})}_{\tikzmark{a}} &= \int
+  \underbrace{\Pr(\zb_t \mid \zb_{t-1})}_{\mathclap{\text{\normalsize state model}}}
+  \underbrace{\Pr(\zb_{t-1} \mid \{\xb\}_1^{t-1})}_{\tikzmark{c}}
+  \label{eqn:forward}\\
+  \intertext{\textbf{Measurement update}}
+  \overbrace{\Pr(\zb_t \mid \{\xb\}_1^t)}^{\tikzmark{d}} &= \frac{
+  \overbrace{\Pr(\zb_t \mid \zb_t)}^{\mathclap{\text{\normalsize obs. model}}}
+  \overbrace{\Pr(\zb_t \mid \{\xb\}_1^{t-1})}^{\tikzmark{b}}}
+  {\Pr(\xb_t \mid \{\xb\}_1^{t-1})}
+  \label{eqn:update}
+  \begin{tikzpicture}[overlay,remember picture,very thick]
+    \draw (a.center) edge[out=270, in=90, ->,red] (b.north);
+    \draw (d.north) edge[out=90, in=270, ->,blue]  (c.center);
+  \end{tikzpicture}
+\end{align}
+
+
+
+Note that equations \eqref{eqn:forward} and \eqref{eqn:update} are always a
+valid way of describing a dynamical system with Markovian properties. When
+we specify ``linear'' and ``Gaussian'', then each component is Gaussian, and
+all that we need to calculate are the mean and covariance. Define
+\begin{align*}
+  \ub_t^{\tau} &= \E(\zb_t \mid \{\xb\}_1^{\tau}) \\
+  \Sb_t^{\tau} &= \Cov(\zb_t \mid \{\xb\}_1^{\tau})
+\end{align*}
+
+\subsubsection*{One-step prediction}
+\begin{equation*}
+  \zb_t \mid \{\xb\}_1^{t-1} \sim \mathcal{N}(\ub_t^{t-1}, \Sb_t^{t-1})
+\end{equation*}
+So we need to find $\ub_t^{t-1}$ and $\Sb_t^{t-1}$. We can equivalently write
+\eqref{eqn:dynamics} as
+\begin{equation*}
+  \zb_t = \Ab \zb_{t-1} + \mathbf{v}_t, \quad \mathbf{v}_t \sim
+    \mathcal{N}(\mathbf{0}, \Qb)
+\end{equation*}
+Thus,
+\begin{align*}
+  \ub_t^{t-1} &= \E(\zb_t \mid \{\xb\}_1^{t-1}) \\
+  &= \Ab  \E(\zb_{t-1} \mid \{\xb\}_1^{t}) +
+    \cancel{\E(\mathbf{v}_t \mid \{\xb\}_1^{t-1})}
+\end{align*}
+\begin{framed}
+  \begin{equation}
+    \ub_t^{t-1} = \Ab \ub_{t-1}^{t-1}
+  \end{equation}
+\end{framed}
+and
+\begin{align*}
+  \Sb_t^{t-1} &= \Cov(\zb_t \mid \{\xb\}_1^{t-1}) \\
+  &= \E((\Ab \zb_{t-1} + \mathbf{v}_t) (\Ab \zb_{t-1} + \mathbf{v}_t)\tran) -
+     \E(\zb_t \mid \{\xb\}_1^{t-1}) \E(\zb_t \mid \{\xb\}_1^{t-1})\tran \\
+  &= \E(\Ab \zb_{t-1} \zb_{t-1}\tran \Ab\tran +
+      \cancel{\mathbf{v}_t \zb_{t-1}\tran \Ab\tran} +
+      \cancel{\Ab \zb_{t-1} \mathbf{v}_t\tran} +
+      \mathbf{v}_t \mathbf{v}_t)\tran) -
+      \Ab \ub_{t-1}^{t-1} (\ub_{t-1}^{t-1})\tran \Ab\tran \\
+  &= \Ab  \Cov(\zb_{t-1} \mid \{\xb\}_1^{t}) \Ab\tran +
+    \Cov(\mathbf{v}_t \mid \{\xb\}_1^{t-1})
+\end{align*}
+\begin{framed}
+  \begin{equation}
+    \Sb_t^{t-1} = \Ab \Sb_{t-1}^{t-1} \Ab\tran + \Qb
+  \end{equation}
+\end{framed}
+
+\subsubsection*{Measurement update}
+\begin{equation*}
+  \zb_t \mid \{\xb\}_1^{t} \sim \mathcal{N}(\ub_t^t, \Sb_t^t)
+\end{equation*}
+So we need to find $\ub_t^t$ and $\Sb_t^t$. Notice that \eqref{eqn:update} is
+just Bayes rule for $\zb_t$ given $\xb_t$ with everything conditioned on
+$\{\xb\}_1^{t-1}$. So inspired by what we learned in our analysis of Dimensionality
+Reduction (P-PCA) about conditional Gaussian distributions from the joint
+distribution, lets start by finding the joint distribution
+$\Pr(\zb_t,\xb_t \mid \{\xb\}_1^{t-1})$.
+
+We will start by noting the equivalent form of
+\eqref{eqn:observations} is
+\begin{equation*}
+  \xb_t = \Cb \zb_t + \mathbf{w}_t, \quad \mathbf{w}_t \sim
+    \mathcal{N}(\mathbf{0}, \Rb)
+\end{equation*}
+We need $\E(\xb_t\mid\{\xb\}_1^{t-1})$, $\Cov(\xb_t\mid\{\xb\}_1^{t-1})$, and
+the cross covariance $\E(\xb_t\,\zb_t\tran \mid\{\xb\}_1^{t-1})$.
+\begin{align}
+  \E(\xb_t\mid\{\xb\}_1^{t-1}) &= \Cb \E(\zb_t\mid\{\xb\}_1^{t-1}) +
+    \cancel{\E(\mathbf{w}_t \mid\{\xb\}_1^{t-1})} \nonumber \\
+    &= \Cb \ub_t^{t-1}
+\end{align}
+
+\begin{align}
+  \Cov(\xb_t\mid\{\xb\}_1^{t-1}) &= \Cb \Cov(\zb_t\mid\{\xb\}_1^{t-1}) \Cb\tran +
+    \Cov(\mathbf{w}_t \mid\{\xb\}_1^{t-1}) + \cancel{\E(\text{cross terms})}\nonumber \\
+    &= \Cb \Sb_t^{t-1} \Cb\tran + \Rb
+\end{align}
+
+\begin{align}
+  &\E(\xb_t \, \zb_t\tran \mid\{\xb\}_1^{t-1}) - \E(\xb_t\mid\{\xb\}_1^{t-1})
+      \E(\zb_t\mid\{\xb\}_1^{t-1})\tran \\
+   &\qquad\qquad = \Cb \E(\zb_t \,\zb_t\tran \mid\{\xb\}_1^{t-1}) +
+       \cancel{\E(\mathbf{v}_t \, \zb_t\tran \mid\{\xb\}_1^{t-1})} -
+       \Cb \ub_t^{t-1} {\ub_t^{t-1}}\tran \\
+  &\qquad\qquad = \Cb \Sb_t^{t-1}
+\end{align}
+
+Filling in, we have
+
+\begin{equation*}
+  \begin{bmatrix}\xb_t \\ \zb_t\end{bmatrix} \mid \{\xb\}_1^{t-1} \sim
+    \mathcal{N}\left( \begin{bmatrix}\Cb \ub_t^{t-1} \\ \ub_t^{t-1}\end{bmatrix},
+      \begin{bmatrix}\Cb \Sb_t^{t-1} \Cb\tran + \Rb & \Cb \Sb_t^{t-1} \\
+                     \Sb_t^{t-1} \Cb\tran &
+                     \Sb_t^{t-1}\end{bmatrix}
+    \right)
+\end{equation*}
+
+Now, applying the rule for conditioning in jointly Gaussian random variables
+(see Dimensionality Reduction notes), we have
+
+\begin{align*}
+  \ub_t^t &= \E(\zb_t \mid \xb_t, \{\xb\}_1^{t-1}) \\
+      &= \ub_t^{t-1} + \underbrace{\Sb_t^{t-1} \Cb\tran
+          (\Cb \Sb_t^{t-1} \Cb\tran + \Rb)^{-1}}
+          (\xb_t - \Cb \ub_t^{t-1})
+\end{align*}
+The highlighted term, $\Sb_t^{t-1} \Cb\tran (\Cb \Sb_t^{t-1} \Cb\tran + \Rb)^{-1}$,
+is often defined as a single matrix, $\mathbf{K}_t$, or the ``Kalman gain''.
+Rewriting, we have
+\begin{framed}
+  \begin{equation}
+    \ub_t^t = \ub_t^{t-1} + \mathbf{K}_t (\xb_t - \Cb \ub_t^{t-1})
+  \end{equation}
+\end{framed}
+
+
+\end{document}
