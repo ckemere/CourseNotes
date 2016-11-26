@@ -479,5 +479,56 @@ Rewriting, we have
   \end{equation}
 \end{framed}
 
+\begin{align*}
+  \Sb_t^t &= \Cov(\zb_t \mid \xb_t, \{\xb\}_1^{t-1}) \\
+      &= \Sb_t^{t-1} + \Sb_t^{t-1} \Cb\tran
+      (\Cb \Sb_t^{t-1} \Cb\tran + \Rb)^{-1} \Cb \Sb_t^{t-1}
+\end{align*}
+
+\begin{framed}
+  \begin{equation}
+    \Sb_t^t = \Sb_t^{t-1} + \mathbf{K}_t \Cb \Sb_t^{t-1}
+  \end{equation}
+\end{framed}
+
+So we can now restate the recursive computation in terms of the means and
+covariances:
+
+\begin{equation}
+\begin{aligned}
+  \textbf{One-step (forward) prediction} \\
+  \Pr(\zb_t \mid \{\xb\}_1^{t-1}) &= \int
+  \Pr(\zb_t \mid \zb_{t-1})
+  \Pr(\zb_{t-1} \mid \{\xb\}_1^{t-1}) \\
+  \ub_t^{t-1} &= \Ab \ub_{t-1}^{t-1}, \\
+  \Sb_t^{t-1} &= \Ab \Sb_{t-1}^{t-1} \Ab\tran + \Qb \\
+  \\
+  \textbf{Measurement update} \\
+  \Pr(\zb_t \mid \{\xb\}_1^t) &= \frac{\Pr(\zb_t \mid \zb_t)
+    \Pr(\zb_t \mid \{\xb\}_1^{t-1})}
+  {\Pr(\xb_t \mid \{\xb\}_1^{t-1})} \\
+  \ub_t^t &= \ub_t^{t-1} + \mathbf{K}_t (\xb_t - \Cb \ub_t^{t-1}),\\
+  \Sb_t^t &= \Sb_t^{t-1} + \mathbf{K}_t \Cb \Sb_t^{t-1}, \\
+  \text{where } \mathbf{K}_t &= \Sb_t^{t-1} \Cb\tran (\Cb \Sb_t^{t-1} \Cb\tran + \Rb)^{-1}  \\
+\end{aligned}
+\label{eqn:recursion}
+\end{equation}
+
+Using these recursions, we can obtain $\ub_t^t$ and $\Sb_t^t$ for $t = 1, \ldots
+T$. What do they mean?
+\begin{itemize}
+  \item $\ub_t^t$ is the estimate of the state at time $t$
+  \item $\Sb_t^t$ is our uncertainty around that estimate at time $t$
+\end{itemize}
+
+\textit{How do we initialize the recursion?} We initialize with $\ub_1^0 =
+\symbf{\pi}$ and $\Sb_1^0 = \mathbf{V}$.
+
+\section{Unsupervised learning?}
+How do we train a linear Gaussian dynamical system model if we don't have
+training data? The unsupervised learning solution is described in Chapter 12 of
+\textit{PRML}. Briefly, the EM algorithm iterates between state estimation via
+\eqref{eqn:recursion} and ML parameter estimation using sufficient statistics
+calculated from those state estimates.
 
 \end{document}
