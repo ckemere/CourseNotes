@@ -221,7 +221,7 @@ Writing down the training data log-likelihood, we have
   \mathcal{L}(\theta) &= \log \Pr(\{\xb\}, \{\zb\} \mid \theta) \\
   &= \log \Pr(\zb_1) +
     \sum_{t=2}^T \log \Pr(\zb_t \mid \zb_{t-1}) +
-    \sum_{t=1}^T \log \Pr(\xb_t \mid \xb_t) \\
+    \sum_{t=1}^T \log \Pr(\zb_t \mid \xb_t) \\
   &= - \frac{M}{2} \log(2 \pi) - \frac{1}{2} \logdet{\mathbf{V}}
        - \frac{1}{2} (\zb_1 - \symbf{\pi})\tran \mathbf{V}^{-1} (\zb_1 - \symbf{\pi}) \\
   &\quad
@@ -349,7 +349,7 @@ We can compute $\Pr(\zb_t \mid \{\xb\}_1^T)$ recursively starting at $t=1$.
   \label{eqn:forward}\\
   \intertext{\textbf{Measurement update}}
   \overbrace{\Pr(\zb_t \mid \{\xb\}_1^t)}^{\tikzmark{d}} &= \frac{
-  \overbrace{\Pr(\zb_t \mid \zb_t)}^{\mathclap{\text{\normalsize obs. model}}}
+  \overbrace{\Pr(\xb_t \mid \zb_t)}^{\mathclap{\text{\normalsize obs. model}}}
   \overbrace{\Pr(\zb_t \mid \{\xb\}_1^{t-1})}^{\tikzmark{b}}}
   {\Pr(\xb_t \mid \{\xb\}_1^{t-1})}
   \label{eqn:update}
