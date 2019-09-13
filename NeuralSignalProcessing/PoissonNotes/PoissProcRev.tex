@@ -75,7 +75,8 @@
 \begin{document}
 \setmainfont{Myriad Pro} %use this font
 %\setmathfont{Latin Modern Math}
-\setmathfont{TG Pagella Math}
+\setmathfont[Path = /usr/share/texmf/fonts/opentype/public/tex-gyre-math/,Extension=.otf]{texgyrepagella-math}
+%\setmathfont{TG Pagella Math}
 
 \begin{center}
 \large
@@ -168,6 +169,10 @@ To show this,
 \Pr\left(T > t + s \vert T > t\right) = \frac{\Pr\left(T > t + s\right)}{\Pr\left(T > t\right)}
 \end{equation}
 
+{\it Intuition:} Conditioning the exponential is like starting at a point away from zero on the
+x axis of the PDF. Turning that new thing into a distribution implies renormalizing, but because 
+of an exponential's shape, that stretching turns it into exactly the same thing as it was before.
+
 \section{Defining the Poisson process}
 \subsection{Constructing a Poisson process}
 Let $t_1, t_2, \ldots$ be independent exponential random variables with parameter $\lambda$. Let
@@ -208,7 +213,7 @@ Recall that summing independent random variables implies convolving their PDF's.
 \begin{split}
 \F\lbrace f_{T_n} \rbrace &= \prod_{i=1}^{n} \F \lbrace f_{T_i} \rbrace \\
   &= \left[\F \lbrace \lambda e^{-\lambda t} u(t)\rbrace \right]^n \\
-  &= \left( \frac{\lambda}{\lambda + \jmath \omega} \right)
+  &= \left[ \frac{\lambda}{\lambda + \jmath \omega} \right]^n
 \end{split}
 \end{equation*}
 
@@ -262,7 +267,7 @@ What are the mean and variance of the Poisson distribution? First the mean:
 \begin{split}
 \E\left[ N(s)\right] &= \sum_{n=0}^{\infty} n \cdot \Pr\left(N(s) = n\right) \\
   &= \sum_{n=1}^{\infty} n \cdot e^{-\lambda s} \frac{(\lambda s)^n}{n!} \\
-  &= \lambda s \sum_{n=1}{\infty} e^{-\lambda s} \frac{ (\lambda s)^{n-1} }{(n-1)!} \\
+  &= \lambda s \sum_{n=1}^{\infty} e^{-\lambda s} \frac{ (\lambda s)^{n-1} }{(n-1)!} \\
   &= \boxed{\lambda s}
 \end{split}
 \end{equation}
